@@ -1,41 +1,72 @@
-import requests
+import json
+import urllib.request
+
+
+def fetch_json(url):
+    try:
+        with urllib.request.urlopen(url) as response:
+            return json.loads(response.read().decode())
+    except:
+        return None
+
 
 def analyze_repo(repo_url):
-    parts = repo_url.replace("https://github.com/", "").split("/")
-    owner, repo = parts[0], parts[1]
+    owner, repo = repo_url.replace("https://github.com/", "").split("/")[:2]
+    api_url = f"https://api.github.com/repos/{owner}/{repo}"
 
-    api = f"https://api.github.com/repos/{owner}/{repo}"
-    data = requests.get(api).json()
+    data = fetch_json(api_url)
+    if not data:
+        return None
 
     score = 100
-    issues = []
 
-    if data.get("open_issues_count", 0) == 0:
-        issues.append("Project has no tracked issues")
+    # README check
+    if not fetch_json(f"{api_url}/readme"):
+        score -= 20
 
-    score -= 20
-    issues.append("No automated tests detected")
-    score -= 10
-    issues.append("CI/CD pipeline not found")
+    # Commit count
+    commits = fetch_json(f"{api_url}/commits")
+    if not commits or len(commits) < 5:
+        score -= 15
 
-    summary = "This repository shows basic structure but lacks testing and automation."
+    # Folder structure check
+    contents = fetch_json(f"{api_url}/contents")
+    if not contents or not any("test" in item["name"].lower() for item in contents):
+        score -= 20
+
+    # CI/CD check
+    if not fetch_json(f"{api_url}/contents/.github/workflows"):
+        score -= 10
+
+    score = max(0, score)
+
+    summary = (
+        "This repository shows a basic project setup. "
+        "However, it lacks testing, automation, and detailed documentation, "
+        "which are important for real-world software projects."
+    )
+
     roadmap = [
-        "Add a README with setup instructions",
+        "Add a clear README with setup instructions",
         "Write basic unit tests",
         "Introduce CI using GitHub Actions",
-        "Improve commit messages",
-        "Refactor folder structure"
+        "Improve commit frequency and messages",
+        "Refactor folder structure for clarity"
     ]
 
     return score, summary, roadmap
 
 
 if __name__ == "__main__":
-    url = input("Enter GitHub repo URL: ")
-    score, summary, roadmap = analyze_repo(url)
+    repo_url = input("Enter GitHub repository URL: ")
+    result = analyze_repo(repo_url)
 
-    print("\nScore:", score)
-    print("\nSummary:", summary)
-    print("\nRoadmap:")
-    for step in roadmap:
-        print("-", step)
+    if not result:
+        print("Invalid repository URL or API error.")
+    else:
+        score, summary, roadmap = result
+        print("\nScore:", score)
+        print("\nSummary:", summary)
+        print("\nRoadmap:")
+        for step in roadmap:
+            print("-", step)

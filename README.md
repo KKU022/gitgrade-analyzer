@@ -1,18 +1,16 @@
 # GitGrade Analyzer
 
-An AI-powered tool that analyzes a GitHub repository and provides:
-- A quality score
-- A short evaluation summary
-- A personalized improvement roadmap
+GitGrade Analyzer is a mentor-style tool that evaluates a GitHub repository and helps
+students understand how their project looks from a software engineering perspective.
 
-## How it works
-The user provides a public GitHub repository URL.  
-The system fetches repository metadata and evaluates code quality, documentation,
-testing practices, and commit consistency.
+## What It Does
+- Takes a public GitHub repository URL
+- Generates a quality score
+- Provides a written summary
+- Suggests a personalized improvement roadmap
 
-## Output
-- Score (0–100)
-- Written summary
-- Actionable roadmap
+## How to Run
+## How to Run
+```bash
+python analyzer.py
 
-Built for the GitGrade Hackathon.
